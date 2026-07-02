@@ -23,6 +23,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from .base_primitive import BasePrimitiveV2
 from .options.estimator_options import EstimatorOptions
 from .utils import validate_estimator_pubs
+from .utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -165,6 +166,22 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             raise ValueError(
                 "When the backend is a simulator and pec_mitigation is enabled, "
                 "a coupling map is required."
+            )
+
+        shots_per_randomization = (
+            options.get("resilience", {})
+            .get("measure_noise_learning", {})
+            .get("shots_per_randomization")
+        )
+        if isinstance(shots_per_randomization, int):
+            issue_deprecation_msg(
+                msg="Specifying 'measure_noise_learning.shots_per_randomization' as an integer "
+                "is deprecated",
+                version="0.48.0",
+                remedy='Use "auto" instead. The executor-backed primitives size the measurement '
+                "noise learning budget automatically under a single global shot budget, "
+                "so an explicit per-randomization integer is not meaningful.",
+                stacklevel=2,
             )
 
     @classmethod
