@@ -12,6 +12,7 @@
 
 """Tests for EstimatorOptions class."""
 
+import warnings
 from dataclasses import asdict
 
 from ddt import data, ddt
@@ -20,7 +21,7 @@ from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import EstimatorV2 as Estimator
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.options import EstimatorOptions
+from qiskit_ibm_runtime.options import EstimatorOptions, MeasureNoiseLearningOptions
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -35,6 +36,10 @@ from ..utils import (
 @ddt
 class TestEstimatorOptions(IBMTestCase):
     """Class for testing the EstimatorOptions class."""
+
+    _shots_per_randomization_deprecation_msg = (
+        "Specifying 'measure_noise_learning.shots_per_randomization' as an integer is deprecated"
+    )
 
     @data(
         ({"resilience_level": -1}, "resilience_level must be >=0"),
@@ -93,6 +98,49 @@ class TestEstimatorOptions(IBMTestCase):
         with self.assertRaisesRegex(ValidationError, error_msg):
             EstimatorOptions(**bad_input)
 
+    def test_deprecate_measure_noise_learning_shots_per_randomization_int_on_init(self):
+        """Integer measure noise learning shots per randomization warns on option init."""
+        with self.assertWarnsRegex(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg
+        ):
+            options = MeasureNoiseLearningOptions(shots_per_randomization=20)
+
+        self.assertEqual(options.shots_per_randomization, 20)
+
+    def test_deprecate_measure_noise_learning_shots_per_randomization_int_nested_init(self):
+        """Nested integer measure noise learning shots per randomization warns on option init."""
+        with self.assertWarnsRegex(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg
+        ):
+            options = EstimatorOptions(
+                resilience={
+                    "measure_mitigation": True,
+                    "measure_noise_learning": {"shots_per_randomization": 20},
+                }
+            )
+
+        self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, 20)
+
+    def test_deprecate_measure_noise_learning_shots_per_randomization_int_on_assignment(self):
+        """Integer measure noise learning shots per randomization warns on option assignment."""
+        options = MeasureNoiseLearningOptions()
+
+        with self.assertWarnsRegex(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg
+        ):
+            options.shots_per_randomization = 20
+
+        self.assertEqual(options.shots_per_randomization, 20)
+
+    def test_measure_noise_learning_shots_per_randomization_auto_does_not_warn(self):
+        """Auto measure noise learning shots per randomization does not warn."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            options = MeasureNoiseLearningOptions(shots_per_randomization="auto")
+            options.shots_per_randomization = "auto"
+
+        self.assertEqual(options.shots_per_randomization, "auto")
+
     def test_program_inputs(self):
         """Test converting to program inputs from estimator options."""
         noise_model = NoiseModel.from_backend(FakeManilaV2())
@@ -110,7 +158,7 @@ class TestEstimatorOptions(IBMTestCase):
             "measure_mitigation": True,
             "measure_noise_learning": {
                 "num_randomizations": 1,
-                "shots_per_randomization": 20,
+                "shots_per_randomization": "auto",
             },
             "zne_mitigation": True,
             "zne": {

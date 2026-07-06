@@ -12,8 +12,6 @@
 
 """Tests for estimator class."""
 
-import warnings
-
 import numpy as np
 from ddt import data, ddt
 from qiskit import QuantumCircuit, transpile
@@ -302,44 +300,3 @@ class TestEstimatorV2(IBMTestCase):
 
         with self.assertRaisesRegex(IBMInputValueError, " h "):
             estimator.run(pubs=[(circ, observable)])
-
-    def test_deprecate_measure_noise_learning_shots_per_randomization_int(self):
-        """Integer measure noise learning shots per randomization emits one DeprecationWarning."""
-        backend = get_mocked_backend()
-        inst = EstimatorV2(mode=backend)
-
-        warning_msg = (
-            "Specifying 'measure_noise_learning.shots_per_randomization' as an integer "
-            "is deprecated"
-        )
-
-        def matching_warnings(call):
-            with warnings.catch_warnings(record=True) as caught:
-                warnings.simplefilter("always", DeprecationWarning)
-                call()
-
-            return [
-                w
-                for w in caught
-                if issubclass(w.category, DeprecationWarning) and warning_msg in str(w.message)
-            ]
-
-        cases = [
-            ("auto does not warn", "auto", 0),
-            ("integer warns once", 32, 1),
-        ]
-
-        for name, shots_per_randomization, expected_warnings in cases:
-            with self.subTest(name=name):
-                options = {
-                    "resilience": {
-                        "measure_noise_learning": {
-                            "shots_per_randomization": shots_per_randomization,
-                        }
-                    }
-                }
-
-                self.assertEqual(
-                    len(matching_warnings(lambda: inst._validate_options(options))),
-                    expected_warnings,
-                )
