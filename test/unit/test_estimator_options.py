@@ -12,7 +12,6 @@
 
 """Tests for EstimatorOptions class."""
 
-import warnings
 from dataclasses import asdict
 
 from ddt import data, ddt
@@ -100,8 +99,8 @@ class TestEstimatorOptions(IBMTestCase):
 
     def test_deprecate_measure_noise_learning_shots_per_randomization_int_on_init(self):
         """Integer measure noise learning shots per randomization warns on option init."""
-        with self.assertWarnsRegex(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg
+        with self.assert_warning_appears(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
         ):
             options = MeasureNoiseLearningOptions(shots_per_randomization=20)
 
@@ -109,8 +108,8 @@ class TestEstimatorOptions(IBMTestCase):
 
     def test_deprecate_measure_noise_learning_shots_per_randomization_int_nested_init(self):
         """Nested integer measure noise learning shots per randomization warns on option init."""
-        with self.assertWarnsRegex(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg
+        with self.assert_warning_appears(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
         ):
             options = EstimatorOptions(
                 resilience={
@@ -125,8 +124,8 @@ class TestEstimatorOptions(IBMTestCase):
         """Integer measure noise learning shots per randomization warns on option assignment."""
         options = MeasureNoiseLearningOptions()
 
-        with self.assertWarnsRegex(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg
+        with self.assert_warning_appears(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
         ):
             options.shots_per_randomization = 20
 
@@ -134,8 +133,9 @@ class TestEstimatorOptions(IBMTestCase):
 
     def test_measure_noise_learning_shots_per_randomization_auto_does_not_warn(self):
         """Auto measure noise learning shots per randomization does not warn."""
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", DeprecationWarning)
+        with self.assert_warning_appears(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 0
+        ):
             options = MeasureNoiseLearningOptions(shots_per_randomization="auto")
             options.shots_per_randomization = "auto"
 
