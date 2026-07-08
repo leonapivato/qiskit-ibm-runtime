@@ -131,6 +131,22 @@ class TestEstimatorOptions(IBMTestCase):
 
         self.assertEqual(options.shots_per_randomization, 20)
 
+    def test_deprecate_measure_noise_learning_shots_per_randomization_int_on_instance_assignment(
+        self,
+    ):
+        """Integer measure noise learning shots per randomization warns on option assignment."""
+        backend = get_mocked_backend()
+        estimator = Estimator(mode=backend)
+
+        with self.assert_warning_appears(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
+        ):
+            estimator.options.resilience.measure_noise_learning.shots_per_randomization = 20
+
+        self.assertEqual(
+            estimator.options.resilience.measure_noise_learning.shots_per_randomization, 20
+        )
+
     def test_measure_noise_learning_shots_per_randomization_auto_does_not_warn(self):
         """Auto measure noise learning shots per randomization does not warn."""
         with self.assert_warning_appears(
