@@ -61,9 +61,7 @@ class MeasureNoiseLearningOptions:
                 msg="Specifying 'measure_noise_learning.shots_per_randomization' as an integer "
                 "is deprecated",
                 version="0.48.0",
-                remedy='Use "auto" instead. The executor-backed primitives size the measurement '
-                "noise learning budget automatically under a single global shot budget, "
-                "so an explicit per-randomization integer is not meaningful.",
+                remedy='Use "auto" instead.',
                 stacklevel=3,
             )
         return value
