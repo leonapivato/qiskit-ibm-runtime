@@ -14,7 +14,7 @@
 
 from dataclasses import asdict
 
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from pydantic import ValidationError
 from qiskit_aer.noise import NoiseModel
 
@@ -97,62 +97,76 @@ class TestEstimatorOptions(IBMTestCase):
         with self.assertRaisesRegex(ValidationError, error_msg):
             EstimatorOptions(**bad_input)
 
-    def test_deprecate_measure_noise_learning_shots_per_randomization_int_on_init(self):
-        """Integer measure noise learning shots per randomization warns on option init."""
+    @data(("auto", 0), (20, 1))
+    @unpack
+    def test_deprecate_measure_noise_learning_shots_per_randomization_on_nested_init(
+        self, value, num_appearances
+    ):
+        """Integer shots_per_randomization warns when set via nested EstimatorOptions init."""
         with self.assert_warning_appears(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
-        ):
-            options = MeasureNoiseLearningOptions(shots_per_randomization=20)
-
-        self.assertEqual(options.shots_per_randomization, 20)
-
-    def test_deprecate_measure_noise_learning_shots_per_randomization_int_nested_init(self):
-        """Nested integer measure noise learning shots per randomization warns on option init."""
-        with self.assert_warning_appears(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
         ):
             options = EstimatorOptions(
                 resilience={
                     "measure_mitigation": True,
-                    "measure_noise_learning": {"shots_per_randomization": 20},
+                    "measure_noise_learning": {"shots_per_randomization": value},
                 }
             )
 
-        self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, 20)
+        self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, value)
 
-    def test_deprecate_measure_noise_learning_shots_per_randomization_int_on_assignment(self):
-        """Integer measure noise learning shots per randomization warns on option assignment."""
+    @data(("auto", 0), (20, 1))
+    @unpack
+    def test_deprecate_measure_noise_learning_shots_per_randomization_on_assignment(
+        self, value, num_appearances
+    ):
+        """Integer shots_per_randomization warns on attribute assignment."""
         options = MeasureNoiseLearningOptions()
 
         with self.assert_warning_appears(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
         ):
-            options.shots_per_randomization = 20
+            options.shots_per_randomization = value
 
-        self.assertEqual(options.shots_per_randomization, 20)
+        self.assertEqual(options.shots_per_randomization, value)
 
-    def test_deprecate_measure_noise_learning_shots_per_randomization_int_on_instance_assignment(
-        self,
+    @data(("auto", 0), (20, 1))
+    @unpack
+    def test_deprecate_measure_noise_learning_shots_per_randomization_on_class_assignment(
+        self, value, num_appearances
     ):
-        """Integer measure noise learning shots per randomization warns on option assignment."""
-        backend = get_mocked_backend()
-        estimator = Estimator(mode=backend)
+        """Integer shots_per_randomization warns when assigned on an estimator instance."""
+        estimator = Estimator(mode=get_mocked_backend())
 
         with self.assert_warning_appears(
-            DeprecationWarning, self._shots_per_randomization_deprecation_msg, 1
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
         ):
-            estimator.options.resilience.measure_noise_learning.shots_per_randomization = 20
+            estimator.options.resilience.measure_noise_learning.shots_per_randomization = value
 
         self.assertEqual(
-            estimator.options.resilience.measure_noise_learning.shots_per_randomization, 20
+            estimator.options.resilience.measure_noise_learning.shots_per_randomization, value
         )
 
-    def test_measure_noise_learning_shots_per_randomization_auto_does_not_warn(self):
-        """Auto measure noise learning shots per randomization does not warn."""
+    @data(("auto", 0), (20, 1))
+    @unpack
+    def test_deprecate_measure_noise_learning_shots_per_randomization_on_init(
+        self, value, num_appearances
+    ):
+        """Auto shots_per_randomization does not warn on option init."""
+        with self.assert_warning_appears(
+            DeprecationWarning, self._shots_per_randomization_deprecation_msg, num_appearances
+        ):
+            options = MeasureNoiseLearningOptions(shots_per_randomization=value)
+
+        self.assertEqual(options.shots_per_randomization, value)
+
+    def test_measure_noise_learning_shots_per_randomization_auto_on_assignment_does_not_warn(self):
+        """Auto shots_per_randomization does not warn on attribute assignment."""
+        options = MeasureNoiseLearningOptions()
+
         with self.assert_warning_appears(
             DeprecationWarning, self._shots_per_randomization_deprecation_msg, 0
         ):
-            options = MeasureNoiseLearningOptions(shots_per_randomization="auto")
             options.shots_per_randomization = "auto"
 
         self.assertEqual(options.shots_per_randomization, "auto")
