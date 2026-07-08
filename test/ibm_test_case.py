@@ -202,13 +202,11 @@ class IBMTestCase(TestCase):
             num_appearances: The exact number of matching warnings expected.
             attributed_to_caller: When ``True`` (default), also assert that each matching
                 warning is blamed on this method's caller -- the frame that opened the
-                ``with`` block -- rather than on library internals (whether
-                ``qiskit_ibm_runtime`` or an intermediary such as ``pydantic``). This verifies
-                the emitting call sets ``stacklevel`` so the warning points at the user's own
-                code, which is what makes it visible in scripts and Jupyter notebooks (Python's
-                default filters only show a ``DeprecationWarning`` blamed on ``__main__``).
-                Assumes the warning-emitting call is made directly inside the ``with`` block;
-                set to ``False`` when the call is wrapped in a helper defined in another file.
+                ``with`` block. This verifies the emitting call sets ``stacklevel`` so the warning
+                points at the user's own code, which is what makes it visible in scripts and
+                Jupyter notebooks. Assumes the warning-emitting call is made directly inside the
+                ``with`` block; set to ``False`` when the call is wrapped in a helper defined in
+                another file.
         """
         # The caller is the frame that opened the ``with`` block: this generator frame (0),
         # contextlib's ``_GeneratorContextManager`` wrapper (1), then the caller (2).
