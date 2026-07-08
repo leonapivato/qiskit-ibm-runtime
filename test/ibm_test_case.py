@@ -26,7 +26,6 @@ from unittest.util import safe_repr
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-import qiskit_ibm_runtime
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.utils.logging import QISKIT_IBM_RUNTIME_LOGGER_NAME
 
@@ -193,7 +192,7 @@ class IBMTestCase(TestCase):
         warning: type[Warning],
         msg: str,
         num_appearances: int,
-        user_level: bool = True,
+        attributed_to_caller: bool = True,
     ) -> Iterator[None]:
         """Assert that a warning matching the category and message appears a set number of times.
 
@@ -201,13 +200,20 @@ class IBMTestCase(TestCase):
             warning: The warning category to match.
             msg: A substring that must appear in the warning message.
             num_appearances: The exact number of matching warnings expected.
-            user_level: When ``True`` (default), also assert that each matching warning is
-                attributed to user-level code -- one frame above the ``qiskit_ibm_runtime``
-                internals rather than inside the library itself. This verifies the emitting
-                call sets ``stacklevel`` correctly, which is what makes the warning visible
-                in scripts and Jupyter notebooks (Python's default filters only show a
-                ``DeprecationWarning`` blamed on ``__main__``).
+            attributed_to_caller: When ``True`` (default), also assert that each matching
+                warning is blamed on this method's caller -- the frame that opened the
+                ``with`` block -- rather than on library internals (whether
+                ``qiskit_ibm_runtime`` or an intermediary such as ``pydantic``). This verifies
+                the emitting call sets ``stacklevel`` so the warning points at the user's own
+                code, which is what makes it visible in scripts and Jupyter notebooks (Python's
+                default filters only show a ``DeprecationWarning`` blamed on ``__main__``).
+                Assumes the warning-emitting call is made directly inside the ``with`` block;
+                set to ``False`` when the call is wrapped in a helper defined in another file.
         """
+        # The caller is the frame that opened the ``with`` block: this generator frame (0),
+        # contextlib's ``_GeneratorContextManager`` wrapper (1), then the caller (2).
+        caller = inspect.stack()[2]
+
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always", warning)
             yield
@@ -225,15 +231,16 @@ class IBMTestCase(TestCase):
             f"{msg!r}, found {len(matching_warnings)}. All warnings: {all_warnings}",
         )
 
-        if user_level:
-            package_dir = os.path.abspath(os.path.dirname(qiskit_ibm_runtime.__file__))
+        if attributed_to_caller:
+            caller_file = os.path.abspath(caller.filename)
             for w in matching_warnings:
-                self.assertFalse(
-                    os.path.abspath(w.filename).startswith(package_dir),
-                    f"Warning {msg!r} was attributed to qiskit_ibm_runtime internals "
-                    f"({w.filename}:{w.lineno}). Its stacklevel should point one level "
-                    f"above, at the caller's code, so the warning is visible in scripts "
-                    f"and Jupyter notebooks.",
+                self.assertEqual(
+                    os.path.abspath(w.filename),
+                    caller_file,
+                    f"Warning {msg!r} was blamed on {w.filename}:{w.lineno}, not the caller's "
+                    f"frame ({caller.filename}:{caller.lineno}). Its stacklevel must point at "
+                    f"the user's code -- past any qiskit_ibm_runtime or pydantic internals -- "
+                    f"so the warning is visible in scripts and Jupyter notebooks.",
                 )
 
     def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
