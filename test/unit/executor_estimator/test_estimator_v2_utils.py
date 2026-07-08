@@ -149,6 +149,20 @@ class TestResolvePrecision(unittest.TestCase):
 
         self.assertIn("same precision", str(context.exception))
 
+    def test_pub_level_zero_precision_raises(self):
+        """Test that a pub-level precision of 0 is rejected."""
+        pub = EstimatorPub.coerce((self.circuit, self.observable), precision=0)
+
+        with self.assertRaisesRegex(IBMInputValueError, "must be strictly greater than 0"):
+            resolve_precision([pub])
+
+    def test_run_level_zero_precision_raises(self):
+        """Test that a run-level precision of 0 is rejected when pubs have no precision."""
+        pub = EstimatorPub.coerce((self.circuit, self.observable))
+
+        with self.assertRaisesRegex(IBMInputValueError, "must be strictly greater than 0"):
+            resolve_precision([pub], run_precision=0)
+
 
 @ddt
 class TestBoxCircuit(unittest.TestCase):
