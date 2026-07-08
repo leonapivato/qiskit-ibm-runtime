@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from dataclasses import asdict
 from typing import TYPE_CHECKING
 
@@ -190,9 +191,7 @@ class SamplerV2(BaseSamplerV2):
         return self._executor.run(quantum_program)
 
     def prepare(
-        self,
-        pubs: Sequence[SamplerPub],
-        default_shots: int | None = None,
+        self, pubs: Sequence[SamplerPub], default_shots: int | None = None
     ) -> tuple[QuantumProgram, ExecutorOptions]:
         """Convert a sequence of sampler PUBs to a quantum program and map options.
 
@@ -203,7 +202,7 @@ class SamplerV2(BaseSamplerV2):
         Args:
             pubs: List of sampler PUBs to convert.
             default_shots: Default number of shots if not specified in PUBs. If ``None``,
-                uses the value from ``self.options.default_shots``.
+                uses the value from ``options.default_shots``.
 
         Returns:
             A tuple containing:
@@ -219,8 +218,10 @@ class SamplerV2(BaseSamplerV2):
                 (when twirling is disabled), if shots are not properly specified, or if
                 measurement twirling is enabled with a non-classified ``meas_type``.
         """
-        # Use instance options
-        options = self.options
+        # Finalize options
+        options = deepcopy(self.options)
+        options.twirling.enable_gates = options.twirling.enable_gates or False
+        options.twirling.enable_measure = options.twirling.enable_measure or False
 
         # Reject measurement twirling combined with a kerneled meas_type before submission
         validate_meas_type_twirling(
@@ -346,13 +347,19 @@ class SamplerV2(BaseSamplerV2):
 
         Args:
             pubs: List of sampler PUBs to run.
+            options: The user options, finalized.
             shots: The number of shots to run.
 
         Returns:
             A LocalRuntimeJob.
         """
+        # Finalize options
+        options = deepcopy(self.options)
+        options.twirling.enable_gates = options.twirling.enable_gates or False
+        options.twirling.enable_measure = options.twirling.enable_measure or False
+
         # Prepare options dict - this goes in the inputs["options"] field
-        options_dict = asdict(self.options)  # type: ignore[call-overload]
+        options_dict = asdict(options)  # type: ignore[call-overload]
         options_dict["default_shots"] = shots
 
         # Prepare inputs dict with pubs and options
