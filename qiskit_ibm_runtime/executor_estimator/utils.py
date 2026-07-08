@@ -158,7 +158,7 @@ def resolve_precision(
             "(possibly via the run provided precision parameter)"
         )
 
-    if (precision := next(iter(pub_precisions))) == 0:
+    if (precision := next(iter(pub_precisions))) is not None and precision <= 0:
         raise IBMInputValueError("The precision value must be strictly greater than 0.")
 
     return precision
