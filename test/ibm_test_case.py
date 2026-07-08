@@ -26,6 +26,7 @@ from unittest.util import safe_repr
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
+import qiskit_ibm_runtime
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.utils.logging import QISKIT_IBM_RUNTIME_LOGGER_NAME
 
@@ -188,9 +189,25 @@ class IBMTestCase(TestCase):
 
     @contextmanager
     def assert_warning_appears(
-        self, warning: type[Warning], msg: str, num_appearances: int
+        self,
+        warning: type[Warning],
+        msg: str,
+        num_appearances: int,
+        user_level: bool = True,
     ) -> Iterator[None]:
-        """Assert that a warning matching the category and message appears a set number of times."""
+        """Assert that a warning matching the category and message appears a set number of times.
+
+        Args:
+            warning: The warning category to match.
+            msg: A substring that must appear in the warning message.
+            num_appearances: The exact number of matching warnings expected.
+            user_level: When ``True`` (default), also assert that each matching warning is
+                attributed to user-level code -- one frame above the ``qiskit_ibm_runtime``
+                internals rather than inside the library itself. This verifies the emitting
+                call sets ``stacklevel`` correctly, which is what makes the warning visible
+                in scripts and Jupyter notebooks (Python's default filters only show a
+                ``DeprecationWarning`` blamed on ``__main__``).
+        """
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always", warning)
             yield
@@ -207,6 +224,17 @@ class IBMTestCase(TestCase):
             f"Expected {num_appearances} {warning.__name__} warnings containing "
             f"{msg!r}, found {len(matching_warnings)}. All warnings: {all_warnings}",
         )
+
+        if user_level:
+            package_dir = os.path.abspath(os.path.dirname(qiskit_ibm_runtime.__file__))
+            for w in matching_warnings:
+                self.assertFalse(
+                    os.path.abspath(w.filename).startswith(package_dir),
+                    f"Warning {msg!r} was attributed to qiskit_ibm_runtime internals "
+                    f"({w.filename}:{w.lineno}). Its stacklevel should point one level "
+                    f"above, at the caller's code, so the warning is visible in scripts "
+                    f"and Jupyter notebooks.",
+                )
 
     def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
         """Save a Plotly figure as an HTML artifact."""
