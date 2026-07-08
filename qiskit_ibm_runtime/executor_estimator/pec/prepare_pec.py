@@ -87,6 +87,11 @@ def prepare_pec(
         IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
             the pubs layers.
     """
+    if twirling_options is None:
+        raise ValueError("not supported.")
+    if measure_noise_learning is not None and twirling_options.enable_measure is None:
+        raise ValueError("not supported.")
+
     num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
