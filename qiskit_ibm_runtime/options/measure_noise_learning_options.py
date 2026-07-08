@@ -64,6 +64,6 @@ class MeasureNoiseLearningOptions:
                 remedy='Use "auto" instead. The executor-backed primitives size the measurement '
                 "noise learning budget automatically under a single global shot budget, "
                 "so an explicit per-randomization integer is not meaningful.",
-                stacklevel=2,
+                stacklevel=3,
             )
         return value
