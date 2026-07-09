@@ -425,8 +425,12 @@ class TestPreparePecFunction(unittest.TestCase):
         pec_options = PecOptions()
         pec_options.noise_gain = 0.5
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pec([pub1, pub2], TwirlingOptions(), 1024, pec_options, noise_model_mapping)
+            prepare_pec([pub1, pub2], twirling_options, 1024, pec_options, noise_model_mapping)
 
         self.assertIn("noise_model_mapping", str(context.exception))
 
@@ -455,8 +459,12 @@ class TestPreparePecFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 16
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         quantum_program = prepare_pec(
-            [pub], TwirlingOptions(), 1024, pec_options, noise_model_mapping, measure_noise_learning
+            [pub], twirling_options, 1024, pec_options, noise_model_mapping, measure_noise_learning
         )
 
         # Should have 2 items: 1 for pub + 1 TREX calibration
