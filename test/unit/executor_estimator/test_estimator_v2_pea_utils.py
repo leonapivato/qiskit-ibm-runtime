@@ -67,9 +67,13 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 1024
         quantum_program = prepare_pea(
-            [pub], TwirlingOptions(), shots, zne_options, noise_model_mapping
+            [pub], twirling_options, shots, zne_options, noise_model_mapping
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)
@@ -152,9 +156,13 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 2048
         quantum_program = prepare_pea(
-            [pub1, pub2], TwirlingOptions(), shots, zne_options, noise_model_mapping
+            [pub1, pub2], twirling_options, shots, zne_options, noise_model_mapping
         )
 
         self.assertEqual(len(quantum_program.items), 2)
@@ -226,8 +234,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pea([pub], TwirlingOptions(), 1024, zne_options, {})
+            prepare_pea([pub], twirling_options, 1024, zne_options, {})
 
         self.assertIn("noise_model_mapping", str(context.exception))
 
@@ -261,8 +273,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pea([pub1, pub2], TwirlingOptions(), 1024, zne_options, noise_model_mapping)
+            prepare_pea([pub1, pub2], twirling_options, 1024, zne_options, noise_model_mapping)
 
         self.assertIn("noise_model_mapping", str(context.exception))
 
@@ -372,9 +388,13 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 1024
         quantum_program = prepare_pea(
-            [pub], TwirlingOptions(), shots, zne_options, noise_model_mapping
+            [pub], twirling_options, shots, zne_options, noise_model_mapping
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)
