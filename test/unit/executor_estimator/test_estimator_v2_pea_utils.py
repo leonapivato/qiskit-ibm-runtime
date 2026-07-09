@@ -18,7 +18,7 @@ from typing import Any, cast
 
 import numpy as np
 from ddt import ddt
-from qiskit import QuantumCircuit
+from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import InjectNoise
@@ -277,8 +277,12 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         # find layers first to extract the layers ref
-        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub], twirling_options, inject_noise=True)
         noise_layer_ref = ""
         for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
@@ -296,7 +300,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         quantum_program = prepare_pea(
             [pub],
-            TwirlingOptions(),
+            twirling_options,
             1024,
             zne_options,
             noise_model_mapping,
@@ -334,8 +338,6 @@ class TestPreparePeaFunction(unittest.TestCase):
 
     def test_prepare_pea_with_parameters(self):
         """Test prepare_pea with a pub containing parameters and validate final shape."""
-        from qiskit.circuit import Parameter
-
         # Create a parameterized circuit with rz gates (supported by samplomatic)
         circuit = QuantumCircuit(2)
         theta = Parameter("theta")

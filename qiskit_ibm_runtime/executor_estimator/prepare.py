@@ -75,6 +75,9 @@ def prepare(
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
     """
+    if measure_noise_learning is not None and twirling_options.enable_measure is None:
+        raise ValueError("not supported.")
+
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
             shots,

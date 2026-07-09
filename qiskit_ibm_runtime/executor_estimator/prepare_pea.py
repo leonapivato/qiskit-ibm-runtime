@@ -88,6 +88,10 @@ def prepare_pea(
             the pubs layers.
 
     """
+    if twirling_options is None:
+        raise ValueError("not supported.")
+    if measure_noise_learning is not None and twirling_options.enable_measure is None:
+        raise ValueError("not supported.")
     if zne_options.amplifier != "pea":
         raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")
 
