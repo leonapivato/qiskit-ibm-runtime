@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
@@ -43,6 +44,35 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
+
+RESILIENCE_LEVEL_DEFAULTS = {
+    0: {
+        "enable_gates": False,
+        "enable_measure": False,
+        "measure_mitigation": False,
+        "zne_mitigation": False,
+    },
+    1: {
+        "enable_gates": False,
+        "enable_measure": True,
+        "measure_mitigation": True,
+        "zne_mitigation": False,
+    },
+    2: {
+        "enable_gates": True,
+        "enable_measure": True,
+        "measure_mitigation": True,
+        "zne_mitigation": True,
+    },
+}
+"""Default configuration for resilience levels used by the execution pipeline.
+
+Fields:
+* ``enable_gates``: Whether to enable twirling for gates.
+* ``enable_measure``: Whether to enable twirling for measurements.
+* ``measure_mitigation``: Whether to apply measurement error mitigation.
+* ``zne_mitigation``: Whether to apply zero-noise extrapolation (ZNE).
+"""
 
 
 class EstimatorV2(BaseEstimatorV2):
@@ -169,39 +199,21 @@ class EstimatorV2(BaseEstimatorV2):
         Returns:
             The finalized :class:`~.EstimatorOptions` object.
         """
+        options = deepcopy(self.options)
+
         # Begin by initializing options based on resilience level
-        options = EstimatorOptions()
-        if (resilience_level := self.options.resilience_level) == 0:
-            options.twirling.enable_gates = False
-            options.twirling.enable_measure = False
-            options.resilience.measure_mitigation = False
-        elif resilience_level == 1:
-            options.twirling.enable_gates = False
-            options.twirling.enable_measure = True
-            options.resilience.measure_mitigation = True
-        elif resilience_level == 2:
-            options.twirling.enable_gates = True
-            options.twirling.enable_measure = True
-            options.resilience.measure_mitigation = True
-            options.resilience.zne_mitigation = True
+        defults = RESILIENCE_LEVEL_DEFAULTS[options.resilience_level]
 
-        # Dump user options, excluding values that have been set to ``None``--these values are
-        # decided based on the resilience level.
-        # Note: This will become cleaner when we switch to pydantic models for options.
-        options_dict = asdict(options)  # type: ignore[call-overload]
-        user_options_dict = asdict(self.options)  # type: ignore[call-overload]
-        if self.options.twirling.enable_gates is None:
-            user_options_dict["twirling"].pop("enable_gates")
-        if self.options.twirling.enable_measure is None:
-            user_options_dict["twirling"].pop("enable_measure")
-        if self.options.resilience.measure_mitigation is None:
-            user_options_dict["resilience"].pop("measure_mitigation")
-        if self.options.resilience.zne_mitigation is None:
-            user_options_dict["resilience"].pop("zne_mitigation")
-        options_dict.update(user_options_dict)
-        options = EstimatorOptions(**options_dict)
+        if options.twirling.enable_gates is None:
+            options.twirling.enable_gates = defults["enable_gates"]
+        if options.twirling.enable_measure is None:
+            options.twirling.enable_measure = defults["enable_measure"]
+        if options.resilience.measure_mitigation is None:
+            options.resilience.measure_mitigation = defults["measure_mitigation"]
+        if options.resilience.zne_mitigation is None:
+            options.resilience.zne_mitigation = defults["zne_mitigation"]
 
-        # Finally, force-set some values based on mitigation
+        # Force-set some values based on mitigation
         if options.resilience.measure_mitigation is True:
             options.twirling.enable_measure = True
         if options.resilience.zne_mitigation is True and options.resilience.zne.amplifier == "pea":
