@@ -60,6 +60,7 @@ class TestEstimatorV2Run(unittest.TestCase):
     def test_run_single_pub_no_parameters(self):
         """Test run with single pub without parameters."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -85,6 +86,7 @@ class TestEstimatorV2Run(unittest.TestCase):
     def test_run_with_pub_level_precision(self):
         """Test that EstimatorPub.coerce is called with precision parameter."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -102,11 +104,9 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def test_run_uses_default_precision_from_options(self):
         """Test that run uses default_precision from options when precision not specified."""
-        options = EstimatorOptions()
-
-        options.default_precision = 0.01
-
-        estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.default_precision = 0.01
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -128,6 +128,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         options.default_precision = 0.022097  # sqrt(1/2048)
 
         estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -185,10 +186,9 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def test_run_with_default_precision(self):
         """Test that run uses the default precision value from options."""
-        options = EstimatorOptions()
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
         # default_precision is 0.015625 by default
-
-        estimator = EstimatorV2(mode=self.backend, options=options)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)

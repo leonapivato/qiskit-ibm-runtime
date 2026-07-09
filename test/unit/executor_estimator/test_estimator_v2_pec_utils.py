@@ -226,9 +226,13 @@ class TestPreparePecFunction(unittest.TestCase):
         pec_options = PecOptions()
         pec_options.noise_gain = 0.5
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 1024
         quantum_program = prepare_pec(
-            [pub], TwirlingOptions(), shots, pec_options, noise_model_mapping
+            [pub], twirling_options, shots, pec_options, noise_model_mapping
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)
@@ -304,9 +308,13 @@ class TestPreparePecFunction(unittest.TestCase):
         pec_options = PecOptions()
         pec_options.noise_gain = 0.3
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 2048
         quantum_program = prepare_pec(
-            [pub1, pub2], TwirlingOptions(), shots, pec_options, noise_model_mapping
+            [pub1, pub2], twirling_options, shots, pec_options, noise_model_mapping
         )
 
         self.assertEqual(len(quantum_program.items), 2)
@@ -365,9 +373,13 @@ class TestPreparePecFunction(unittest.TestCase):
         pec_options.noise_gain = "auto"  # Should default to 0
         pec_options.max_overhead = max_overhead
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 1024
         quantum_program = prepare_pec(
-            [pub], TwirlingOptions(), shots, pec_options, noise_model_mapping
+            [pub], twirling_options, shots, pec_options, noise_model_mapping
         )
 
         item = cast("SamplexItem", quantum_program.items[0])
@@ -392,8 +404,12 @@ class TestPreparePecFunction(unittest.TestCase):
         pec_options = PecOptions()
         pec_options.noise_gain = 0.5
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pec([pub], TwirlingOptions(), 1024, pec_options, {})
+            prepare_pec([pub], twirling_options, 1024, pec_options, {})
 
         self.assertIn("noise_model_mapping", str(context.exception))
 

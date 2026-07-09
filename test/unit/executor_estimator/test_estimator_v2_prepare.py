@@ -117,8 +117,12 @@ class TestPrepareFunction(unittest.TestCase):
         pub1 = EstimatorPub.coerce((circuit1, observables1))
         pub2 = EstimatorPub.coerce((circuit2, observables2, parameter_values2))
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = False
+        twirling_options.enable_measure = False
+
         shots = 1024
-        quantum_program = prepare([pub1, pub2], TwirlingOptions(), shots)
+        quantum_program = prepare([pub1, pub2], twirling_options, shots)
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, shots)
@@ -230,9 +234,13 @@ class TestPrepareFunction(unittest.TestCase):
         observable = SparsePauliOp.from_list([("ZZ", 1)])
         pub = EstimatorPub.coerce((circuit, observable))
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         # Should raise an error - the classical register name is reserved
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], TwirlingOptions(), 1024)
+            prepare([pub], twirling_options, 1024)
 
         self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))
@@ -250,11 +258,15 @@ class TestPrepareFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 16
 
-        quantum_program_without_measure_noise_learning = prepare([pub], TwirlingOptions(), shots)
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = False
+        twirling_options.enable_measure = False
+
+        quantum_program_without_measure_noise_learning = prepare([pub], twirling_options, shots)
         self.assertEqual(len(quantum_program_without_measure_noise_learning.items), 1)
 
         twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = True
+        twirling_options.enable_gates = False
         twirling_options.enable_measure = True
 
         quantum_program_with_mitigation = prepare(

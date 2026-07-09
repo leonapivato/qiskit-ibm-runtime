@@ -28,7 +28,7 @@ from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
-from .utils import find_unique_layers, resolve_precision
+from .utils import finalize_options, find_unique_layers, resolve_precision
 from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
@@ -169,49 +169,7 @@ class EstimatorV2(BaseEstimatorV2):
         Returns:
             The finalized :class:`~.EstimatorOptions` object.
         """
-        # Begin by initializing options based on resilience level
-        options = EstimatorOptions()
-        if (resilience_level := self.options.resilience_level) == 0:
-            options.twirling.enable_gates = False
-            options.twirling.enable_measure = False
-            options.resilience.measure_mitigation = False
-        elif resilience_level == 1:
-            options.twirling.enable_gates = False
-            options.twirling.enable_measure = True
-            options.resilience.measure_mitigation = True
-        elif resilience_level == 2:
-            options.twirling.enable_gates = True
-            options.twirling.enable_measure = True
-            options.resilience.measure_mitigation = True
-            options.resilience.zne_mitigation = True
-
-        # Dump user options, excluding values that have been set to ``None``--these values are
-        # decided based on the resilience level.
-        # Note: This will become cleaner when we switch to pydantic models for options.
-        options_dict = asdict(options)  # type: ignore[call-overload]
-        user_options_dict = asdict(self.options)  # type: ignore[call-overload]
-        if self.options.twirling.enable_gates is None:
-            user_options_dict["twirling"].pop("enable_gates")
-        if self.options.twirling.enable_measure is None:
-            user_options_dict["twirling"].pop("enable_measure")
-        if self.options.resilience.measure_mitigation is None:
-            user_options_dict["resilience"].pop("measure_mitigation")
-        if self.options.resilience.zne_mitigation is None:
-            user_options_dict["resilience"].pop("zne_mitigation")
-        options_dict.update(user_options_dict)
-        options = EstimatorOptions(**options_dict)
-
-        # Finally, force-set some values based on mitigation
-        if options.resilience.measure_mitigation is True:
-            options.twirling.enable_measure = True
-        if options.resilience.zne_mitigation is True and options.resilience.zne.amplifier == "pea":
-            options.twirling.enable_gates = True
-            options.twirling.enable_measure = True
-        if options.resilience.pec_mitigation is True:
-            options.twirling.enable_gates = True
-            options.twirling.enable_measure = True
-
-        return options
+        return finalize_options(self.options)
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
