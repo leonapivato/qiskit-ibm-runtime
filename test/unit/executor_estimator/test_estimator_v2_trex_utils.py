@@ -31,8 +31,8 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 class TestCreateTrexCalibrationCircuit(unittest.TestCase):
     """Tests for create_trex_calibration_circuit function."""
 
-    def test_explicit_num_randomizations_is_used(self):
-        """An explicit num_randomizations is used as-is, ignoring the twirling value."""
+    def test_creates_samplex_item_with_given_randomizations(self):
+        """Test calibration circuit shape and size are derived from inputs."""
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
         circuit1.cx(0, 1)
@@ -45,31 +45,12 @@ class TestCreateTrexCalibrationCircuit(unittest.TestCase):
         pub1 = EstimatorPub.coerce((circuit1, SparsePauliOp.from_list([("ZZ", 1)])))
         pub2 = EstimatorPub.coerce((circuit2, SparsePauliOp.from_list([("ZZZ", 1)])))
 
-        measure_noise_learning = MeasureNoiseLearningOptions()
-        measure_noise_learning.num_randomizations = 16
-
-        # twirling_num_randomizations (8) is ignored because num_randomizations is explicit.
-        result = create_trex_calibration_circuit(
-            [pub1, pub2], measure_noise_learning, twirling_num_randomizations=8
-        )
+        result = create_trex_calibration_circuit([pub1, pub2], num_randomizations=16)
 
         self.assertIsInstance(result, SamplexItem)
         self.assertEqual(result.shape, (16,))
         self.assertEqual(result.circuit.num_qubits, 3)
         self.assertIn("_trex_cal", result.circuit.cregs[0].name)
-
-    def test_auto_follows_twirling_num_randomizations(self):
-        """With num_randomizations="auto" (default), TREX follows the twirling value."""
-        circuit = QuantumCircuit(2)
-        pub = EstimatorPub.coerce((circuit, SparsePauliOp.from_list([("ZZ", 1)])))
-
-        measure_noise_learning = MeasureNoiseLearningOptions()  # num_randomizations="auto"
-
-        result = create_trex_calibration_circuit(
-            [pub], measure_noise_learning, twirling_num_randomizations=32
-        )
-
-        self.assertEqual(result.shape, (32,))
 
     def test_creates_measurement_only_calibration_circuit(self):
         """Test generated TREX circuit contains measurements and no state-preparation gates."""
@@ -78,9 +59,7 @@ class TestCreateTrexCalibrationCircuit(unittest.TestCase):
         circuit.cx(0, 1)
         pub = EstimatorPub.coerce((circuit, SparsePauliOp.from_list([("ZZ", 1)])))
 
-        result = create_trex_calibration_circuit(
-            [pub], MeasureNoiseLearningOptions(), twirling_num_randomizations=32
-        )
+        result = create_trex_calibration_circuit([pub], num_randomizations=32)
 
         operation_names = {instruction.operation.name for instruction in result.circuit.data}
         self.assertIn("measure", operation_names)

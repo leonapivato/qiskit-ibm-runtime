@@ -57,8 +57,7 @@ def resolve_trex_num_randomizations(
 
 def create_trex_calibration_circuit(
     pubs: Sequence[EstimatorPub],
-    measure_noise_learning: MeasureNoiseLearningOptions,
-    twirling_num_randomizations: int,
+    num_randomizations: int,
 ) -> SamplexItem:
     """Creates a TREX calibration circuit.
 
@@ -66,17 +65,12 @@ def create_trex_calibration_circuit(
 
     Args:
         pubs: List of estimator pubs to extract relevant qubits from.
-        measure_noise_learning: Measure noise learning options.
-        twirling_num_randomizations: The number of randomizations used by the
-            estimation twirling, used to resolve ``num_randomizations="auto"``
-            (see :func:`resolve_trex_num_randomizations`).
+        num_randomizations: The number of TREX calibration randomizations (already
+            resolved, see :func:`resolve_trex_num_randomizations`).
 
     Returns:
         Samplex item containing calibration circuit for TREX factors calculation.
     """
-    num_randomizations = resolve_trex_num_randomizations(
-        measure_noise_learning, twirling_num_randomizations
-    )
     # create the combined noise learning layer of all given inputs
     max_num_qubits = max(pub.circuit.num_qubits for pub in pubs)
 
