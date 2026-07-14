@@ -34,7 +34,7 @@ class MeasureNoiseLearningOptions:
     """The number of random circuits to draw for the measurement learning experiment.
 
     If "auto", the calibration uses the same number of randomizations
-    as the estimation twirling.
+    as specified in the estimator's twirling options.
     """
 
     shots_per_randomization: int | Literal["auto"] = "auto"
