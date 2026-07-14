@@ -164,7 +164,9 @@ def prepare(
             raise IBMInputValueError(
                 "shots_per_randomization must be the same for twirling and measure_noise_learning"
             )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        trex_item = create_trex_calibration_circuit(
+            pubs, measure_noise_learning, num_randomizations
+        )
         quantum_program.items.append(trex_item)
         passthrough_data["post_processor"]["measure_mitigation"] = "True"
 
