@@ -37,7 +37,7 @@ def resolve_trex_num_randomizations(
     """Resolve the number of TREX calibration randomizations.
 
     ``measure_noise_learning.num_randomizations`` may be an explicit ``int`` or
-    ``"auto"`` (the default). When ``"auto"``, the TREX calibration uses the same
+    ``"auto"``. When ``"auto"``, the TREX calibration uses the same
     number of randomizations as the estimation twirling
     (``twirling_num_randomizations``); an explicit ``int`` is used as-is.
 
@@ -66,7 +66,7 @@ def create_trex_calibration_circuit(
     Args:
         pubs: List of estimator pubs to extract relevant qubits from.
         num_randomizations: The number of TREX calibration randomizations (already
-            resolved, see :func:`resolve_trex_num_randomizations`).
+            resolved, see :func:`~.resolve_trex_num_randomizations`).
 
     Returns:
         Samplex item containing calibration circuit for TREX factors calculation.
