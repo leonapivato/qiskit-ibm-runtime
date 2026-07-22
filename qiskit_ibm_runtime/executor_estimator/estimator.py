@@ -173,7 +173,7 @@ class EstimatorV2(BaseEstimatorV2):
         :class:`~.CircuitInstruction`) appearing in the input PUBs.
 
         For noise learning, keep only the boxes that carry an :class:`~samplomatic.InjectNoise`
-        annotation -- their refs key the PEC/PEA ``resilience.noise_model_mapping``:
+        annotation:
 
         .. code-block:: python
 
@@ -190,6 +190,9 @@ class EstimatorV2(BaseEstimatorV2):
             ]
 
             results = NoiseLearnerV3(mode).run(layers).result()
+            
+            # This can be use to set the ``noise_model`` field of to ``est.options.resilience``
+            # (please reword as you see fit, and check the correct place where this should end up in the options)
             noise_model = results.to_dict(layers)
 
         Args:
