@@ -190,10 +190,10 @@ class EstimatorV2(BaseEstimatorV2):
             ]
 
             results = NoiseLearnerV3(mode).run(layers).result()
-            
-            # This can be used to set the ``noise_model`` field of to ``est.options.resilience``
-            # (please reword as you see fit, and check the correct place where this should end up in the options)
             noise_model = results.to_dict(layers)
+
+            # Assign the learned model so PEC uses it on the next run.
+            est.options.resilience.noise_model_mapping = noise_model
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
