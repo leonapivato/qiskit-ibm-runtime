@@ -172,6 +172,26 @@ class EstimatorV2(BaseEstimatorV2):
         The returned list contains one instance of each distinct boxed layer (represented as a
         :class:`~.CircuitInstruction`) appearing in the input PUBs.
 
+        For noise learning, keep only the boxes that carry an :class:`~samplomatic.InjectNoise`
+        annotation -- their refs key the PEC/PEA ``resilience.noise_model_mapping``:
+
+        .. code-block:: python
+
+            from samplomatic import InjectNoise
+            from samplomatic.utils import get_annotation
+
+            est = EstimatorV2(mode, options)
+            est.options.resilience.pec_mitigation = True
+
+            layers = [
+                layer
+                for layer in est.find_unique_layers(pubs)
+                if get_annotation(layer.operation, InjectNoise)
+            ]
+
+            results = NoiseLearnerV3(mode).run(layers).result()
+            noise_model = results.to_dict(layers)
+
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
 
